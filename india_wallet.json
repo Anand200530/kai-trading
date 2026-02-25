@@ -1,0 +1,18 @@
+{
+  "capital": 100000,
+  "balance": 90000,
+  "positions": [
+    {
+      "id": 1,
+      "symbol": "BAJAJAUTO",
+      "entry_price": 10097,
+      "qty": 0.9903931860948797,
+      "cost": 10000,
+      "entry_time": "2026-02-25T18:15:00",
+      "stop_loss": 9794.09,
+      "target": 11106.7,
+      "status": "OPEN"
+    }
+  ],
+  "trades": []
+}

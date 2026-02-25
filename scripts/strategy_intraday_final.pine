@@ -1,0 +1,147 @@
+// =====================================================
+// NIFTY 50 - FINAL INTRADAY STRATEGY
+// =====================================================
+// @version=5
+// Timeframe: 15 min (works on any intraday)
+// Instrument: Nifty 50
+
+strategy("Nifty 50 Intraday", 
+     overlay=true, 
+     default_qty_type=strategy.percent_of_equity, 
+     default_qty_value=10,
+     pyramiding=1)
+
+// ========================
+// PARAMETERS (Adjustable)
+// ========================
+
+// Session
+sessionStart = input.session("0915-1500", title="Trading Session")
+useSession = input.bool(true, title="Use Session Filter")
+
+// EMAs
+emaFast = input.int(9, title="Fast EMA")
+emaSlow = input.int(21, title="Slow EMA")
+
+// RSI
+rsiPeriod = input.int(14, title="RSI Period")
+rsiLower = input.int(35, title="RSI Lower")
+rsiUpper = input.int(65, title="RSI Upper")
+
+// SuperTrend
+atrPeriod = input.int(10, title="ATR Period")
+stMultiplier = input.float(2.5, title="ST Multiplier")
+
+// VWAP
+useVWAP = input.bool(true, title="Use VWAP")
+
+// Risk
+slATR = input.float(1.5, title="SL ATR Multiplier")
+tpATR = input.float(3.0, title="Target ATR")
+
+// ========================
+// INDICATORS
+// ========================
+
+inSession = not useSession or time("", sessionStart)
+
+ema9 = ta.ema(close, emaFast)
+ema21 = ta.ema(close, emaSlow)
+rsi = ta.rsi(close, rsiPeriod)
+atr = ta.atr(atrPeriod)
+vwap = ta.vwap(close)
+
+// SuperTrend
+hl2 = (high + low) / 2
+upLevel = hl2 - (stMultiplier * atr)
+dnLevel = hl2 + (stMultiplier * atr)
+
+var float upper = na
+var float lower = na
+var int trend = 1
+
+if na(upper[1])
+    upper := upLevel
+    lower := dnLevel
+else
+    upper := math.max(upLevel, upper[1])
+    lower := math.min(dnLevel, lower[1])
+
+if close > upper[1]
+    trend := 1
+else
+    if close < lower[1]
+        trend := -1
+    else
+        trend := nz(trend[1])
+
+superTrend = trend == 1 ? lower : upper
+
+// ========================
+// PLOTS
+// ========================
+
+plot(ema9, color=color.blue, title="EMA 9")
+plot(ema21, color=color.red, title="EMA 21")
+plot(superTrend, color=trend == 1 ? color.green : color.red, title="SuperTrend", linewidth=2)
+plot(vwap, color=color.purple, title="VWAP", linewidth=2)
+
+// ========================
+// ENTRY CONDITIONS
+// ========================
+
+emaCrossUp = (ema9 > ema21) and (ema9[1] <= ema21[1])
+emaCrossDown = (ema9 < ema21) and (ema9[1] >= ema21[1])
+
+longEntry = 
+ inSession and
+ emaCrossUp and 
+ rsi > rsiLower and rsi < rsiUpper and
+ trend == 1 and
+ (not useVWAP or close > vwap)
+
+shortEntry = 
+ inSession and
+ emaCrossDown and 
+ rsi > 100 - rsiUpper and rsi < 100 - rsiLower and
+ trend == -1 and
+ (not useVWAP or close < vwap)
+
+// ========================
+// EXECUTION
+// ========================
+
+if longEntry and (strategy.position_size == 0)
+    strategy.entry("Long", strategy.long)
+
+if shortEntry and (strategy.position_size == 0)
+    strategy.entry("Short", strategy.short)
+
+// ========================
+// EXITS
+// ========================
+
+entryPrice = strategy.position_avg_price
+
+if strategy.position_size > 0
+    strategy.exit("Long Exit", "Long", stop=entryPrice - slATR * atr, limit=entryPrice + tpATR * atr)
+
+if strategy.position_size < 0
+    strategy.exit("Short Exit", "Short", stop=entryPrice + slATR * atr, limit=entryPrice - tpATR * atr)
+
+// ========================
+// SIGNALS
+// ========================
+
+plotshape(longEntry, location=location.belowbar, color=color.green, style=shape.triangleup, size=size.tiny, text="LONG")
+plotshape(shortEntry, location=location.abovebar, color=color.red, style=shape.triangledown, size=size.tiny, text="SHORT")
+
+// Session bg
+bgcolor(color.new(inSession ? color.green : color.red, 90))
+
+// ========================
+// ALERTS
+// ========================
+
+alertcondition(longEntry, title="Long", message="NIFTY: LONG")
+alertcondition(shortEntry, title="Short", message="NIFTY: SHORT")

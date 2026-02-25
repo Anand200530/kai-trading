@@ -1,0 +1,217 @@
+// =====================================================
+// NIFTY 50 FUTURES - ULTIMATE STRATEGY
+// Highest Win Rate Focus
+// @version=5
+// =====================================================
+
+strategy("Nifty 50 Futures Ultimate", 
+     overlay=true, 
+     default_qty_type=strategy.percent_of_equity, 
+     default_qty_value=10,
+     pyramiding=1)
+
+// ========================
+// STRATEGY SELECTION
+// ========================
+
+strategySel = input.string(title="Strategy", defval="RSI_MACD", 
+     options=["RSI_MACD", "EMA_CROSS", "SUPERTREND", "BREAKOUT", "DONCHIAN", "COMBO"])
+
+// ========================
+// PARAMETERS
+// ========================
+
+// RSI
+rsiPeriod = input.int(14, title="RSI Period")
+rsiLower = input.int(35, title="RSI Lower")
+rsiUpper = input.int(65, title="RSI Upper")
+
+// EMA
+emaFast = input.int(9, title="Fast EMA")
+emaSlow = input.int(21, title="Slow EMA")
+
+// SuperTrend
+atrPeriod = input.int(10, title="ATR Period")
+stMultiplier = input.float(2.5, title="ST Multiplier")
+
+// Breakout
+breakoutPeriod = input.int(20, title="Breakout Period")
+
+// Session
+useSession = input.bool(true, title="Use Session Filter")
+sessionTime = "0915-1500:1234567"
+
+// Risk
+slATR = input.float(1.5, title="SL ATR")
+tpATR = input.float(3.0, title="Target ATR")
+
+// ========================
+// INDICATORS
+// ========================
+
+inSession = not useSession or time("", sessionTime)
+
+rsi = ta.rsi(close, rsiPeriod)
+ema9 = ta.ema(close, emaFast)
+ema21 = ta.ema(close, emaSlow)
+atr = ta.atr(atrPeriod)
+
+// MACD
+[macdLine, signalLine, macdHist] = ta.macd(close, 12, 26, 9)
+
+// SuperTrend
+hl2 = (high + low) / 2
+upLevel = hl2 - (stMultiplier * atr)
+dnLevel = hl2 + (stMultiplier * atr)
+
+var float upper = na
+var float lower = na
+var int trend = 1
+
+if na(upper[1])
+    upper := upLevel
+    lower := dnLevel
+else
+    upper := math.max(upLevel, upper[1])
+    lower := math.min(dnLevel, lower[1])
+
+if close > upper[1]
+    trend := 1
+else
+    if close < lower[1]
+        trend := -1
+    else
+        trend := nz(trend[1])
+
+superTrend = trend == 1 ? lower : upper
+
+// Breakout
+breakoutHigh = ta.highest(high, breakoutPeriod)
+breakoutLow = ta.lowest(low, breakoutPeriod)
+
+// ========================
+// STRATEGY CONDITIONS
+// ========================
+
+// RSI + MACD Combo
+rsiMacdLong = rsi > rsiLower and rsi < rsiUpper and macdHist > 0
+rsiMacdShort = rsi < 100 - rsiUpper and rsi > 100 - rsiLower and macdHist < 0
+
+// EMA Crossover
+emaCrossUp = (ema9 > ema21) and (ema9[1] <= ema21[1])
+emaCrossDown = (ema9 < ema21) and (ema9[1] >= ema21[1])
+
+// SuperTrend
+stLong = trend == 1
+stShort = trend == -1
+
+// Breakout
+breakoutLong = close > breakoutHigh[1]
+breakoutShort = close < breakoutLow[1]
+
+// Donchian
+donchianUpper = ta.highest(high, 20)
+donchianLower = ta.lowest(low, 20)
+donchianLong = close > donchianUpper[1]
+donchianShort = close < donchianLower[1]
+
+// Combo (multiple confirmations)
+comboLong = emaCrossUp and rsi > rsiLower and macdHist > 0 and (not useSession or inSession)
+comboShort = emaCrossDown and rsi < 100 - rsiUpper and macdHist < 0 and (not useSession or inSession)
+
+// ========================
+// APPLY SELECTED STRATEGY
+// ========================
+
+longEntry = switch strategySel
+    "RSI_MACD" => rsiMacdLong
+    "EMA_CROSS" => emaCrossUp
+    "SUPERTREND" => stLong
+    "BREAKOUT" => breakoutLong
+    "DONCHIAN" => donchianLong
+    "COMBO" => comboLong
+
+shortEntry = switch strategySel
+    "RSI_MACD" => rsiMacdShort
+    "EMA_CROSS" => emaCrossDown
+    "SUPERTREND" => stShort
+    "BREAKOUT" => breakoutShort
+    "DONCHIAN" => donchianShort
+    "COMBO" => comboShort
+
+// ========================
+// EXECUTION
+// ========================
+
+if longEntry and (strategy.position_size == 0)
+    strategy.entry("Long", strategy.long)
+
+if shortEntry and (strategy.position_size == 0)
+    strategy.entry("Short", strategy.short)
+
+// ========================
+// EXITS
+// ========================
+
+entryPrice = strategy.position_avg_price
+
+if strategy.position_size > 0
+    strategy.exit("Long Exit", "Long", 
+         stop=entryPrice - slATR * atr, 
+         limit=entryPrice + tpATR * atr)
+
+if strategy.position_size < 0
+    strategy.exit("Short Exit", "Short", 
+         stop=entryPrice + slATR * atr, 
+         limit=entryPrice - tpATR * atr)
+
+// ========================
+// PLOTS
+// ========================
+
+plot(ema9, color=color.blue, title="EMA 9")
+plot(ema21, color=color.red, title="EMA 21")
+plot(superTrend, color=trend == 1 ? color.green : color.red, title="SuperTrend", linewidth=2)
+
+// Signals
+plotshape(longEntry, location=location.belowbar, color=color.green, style=shape.triangleup, size=size.tiny, text="LONG")
+plotshape(shortEntry, location=location.abovebar, color=color.red, style=shape.triangledown, size=size.tiny, text="SHORT")
+
+// Session
+bgcolor(color.new(inSession ? color.green : color.red, 90))
+
+// ========================
+// ALERTS
+// ========================
+
+alertcondition(longEntry, title="Long", message="NIFTY: LONG {{ticker}}")
+alertcondition(shortEntry, title="Short", message="NIFTY: SHORT {{ticker}}")
+
+// ========================
+// STATISTICS (Win Rate)
+// ========================
+
+var int totalTrades = 0
+var int winningTrades = 0
+
+// Track wins
+if strategy.closedtrades > strategy.closedtrades[1]
+    totalTrades := totalTrades + 1
+    if strategy.closedtrades.profit > 0
+        winningTrades := winningTrades + 1
+
+winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0
+
+// Dashboard
+var table stats = table.new(position.bottom_right, 3, 2, bgcolor=color.new(color.black, 80))
+
+if barstate.islast
+    table.cell(stats, 0, 0, "Trades: " + str.tostring(totalTrades), text_color=color.white, text_size=size.small)
+    table.cell(stats, 1, 0, "Wins: " + str.tostring(winningTrades), text_color=color.green, text_size=size.small)
+    table.cell(stats, 2, 0, "Win Rate: " + str.format("{0,number,#.1f}", winRate) + "%", 
+         text_color=winRate > 50 ? color.green : color.red, text_size=size.small)
+    
+    table.cell(stats, 0, 1, "Strategy: " + strategySel, text_color=color.yellow, text_size=size.small)
+    table.cell(stats, 1, 1, "RSI: " + str.format("{0,number,#.0f}", rsi), text_color=color.white, text_size=size.small)
+    table.cell(stats, 2, 1, "Trend: " + (trend == 1 ? "UP" : "DOWN"), 
+         text_color=trend == 1 ? color.green : color.red, text_size=size.small)

@@ -1,0 +1,110 @@
+// =====================================================
+// NIFTY 50 - HIGH WIN RATE STRATEGY
+// @version=5
+// =====================================================
+
+strategy("Nifty High Win Rate", 
+     overlay=true, 
+     default_qty_type=strategy.percent_of_equity, 
+     default_qty_value=10)
+
+// ========================
+// PARAMETERS
+// ========================
+
+emaFast = input.int(9, title="Fast EMA")
+emaSlow = input.int(21, title="Slow EMA")
+rsiPeriod = input.int(14, title="RSI Period")
+rsiLower = input.int(35, title="RSI Lower")
+rsiUpper = input.int(65, title="RSI Upper")
+slPercent = input.float(2.0, title="Stop Loss %")
+tpPercent = input.float(3.0, title="Target %")
+useSession = input.bool(true, title="Use Session Filter")
+
+// ========================
+// INDICATORS
+// ========================
+
+sessionTime = "0915-1500:1234567"
+inSession = not useSession or time("", sessionTime)
+
+ema9 = ta.ema(close, emaFast)
+ema21 = ta.ema(close, emaSlow)
+rsi = ta.rsi(close, rsiPeriod)
+
+// ========================
+// ENTRY
+// ========================
+
+longCondition = inSession and (ema9 > ema21) and (ema9[1] <= ema21[1]) and (rsi > rsiLower) and (rsi < rsiUpper)
+shortCondition = inSession and (ema9 < ema21) and (ema9[1] >= ema21[1]) and (rsi < 100 - rsiUpper) and (rsi > 100 - rsiLower)
+
+// ========================
+// EXECUTION
+// ========================
+
+if longCondition and (strategy.position_size == 0)
+    strategy.entry("Long", strategy.long)
+
+if shortCondition and (strategy.position_size == 0)
+    strategy.entry("Short", strategy.short)
+
+// ========================
+// EXITS
+// ========================
+
+entryPrice = strategy.position_avg_price
+
+if strategy.position_size > 0
+    strategy.exit("Long SL", "Long", stop=entryPrice * (1 - slPercent/100))
+    strategy.exit("Long TP", "Long", limit=entryPrice * (1 + tpPercent/100))
+
+if strategy.position_size < 0
+    strategy.exit("Short SL", "Short", stop=entryPrice * (1 + slPercent/100))
+    strategy.exit("Short TP", "Short", limit=entryPrice * (1 - tpPercent/100))
+
+// ========================
+// PLOTS
+// ========================
+
+plot(ema9, color=color.blue, title="EMA 9")
+plot(ema21, color=color.red, title="EMA 21")
+
+plotshape(longCondition, location=location.belowbar, color=color.green, style=shape.triangleup, size=size.tiny, text="BUY")
+plotshape(shortCondition, location=location.abovebar, color=color.red, style=shape.triangledown, size=size.tiny, text="SELL")
+
+bgcolor(color.new(inSession ? color.green : color.red, 90))
+
+// ========================
+// STATISTICS
+// ========================
+
+totalTrades = strategy.closedtrades
+wins = 0
+for i = 0 to totalTrades - 1
+    if strategy.closedtrades.profit(i) > 0
+        wins := wins + 1
+
+winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0
+
+// ========================
+// DASHBOARD
+// ========================
+
+var table dashboard = table.new(position.top_right, 2, 3, bgcolor=color.new(color.black, 80))
+
+if barstate.islast
+    table.cell(dashboard, 0, 0, "Trades: " + str.tostring(totalTrades), text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 0, "Wins: " + str.tostring(wins), text_color=color.green, text_size=size.small)
+    table.cell(dashboard, 0, 1, "Win Rate: " + str.format("{0,number,#.0f}", winRate) + "%", 
+         text_color=winRate > 50 ? color.green : color.red, text_size=size.small)
+    table.cell(dashboard, 1, 1, "RSI: " + str.format("{0,number,#.0f}", rsi), text_color=color.yellow, text_size=size.small)
+    table.cell(dashboard, 0, 2, "Trend: " + (ema9 > ema21 ? "UP" : "DOWN"), 
+         text_color=ema9 > ema21 ? color.green : color.red, text_size=size.small)
+
+// ========================
+// ALERTS
+// ========================
+
+alertcondition(longCondition, title="Long", message="NIFTY: BUY")
+alertcondition(shortCondition, title="Short", message="NIFTY: SELL")

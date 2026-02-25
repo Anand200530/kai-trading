@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KAI Paper Trading</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="refresh" content="30">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        h1 { font-size: 24px; color: #00ff88; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: #1a1a1a; padding: 20px; border-radius: 12px; text-align: center; }
+        .stat-label { color: #888; font-size: 12px; margin-bottom: 5px; }
+        .stat-value { font-size: 24px; font-weight: bold; }
+        .green { color: #00ff88; }
+        .red { color: #ff4444; }
+        h2 { font-size: 18px; margin-bottom: 15px; color: #ccc; }
+        .position-card { background: #1a1a1a; padding: 15px 20px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .position-info h3 { font-size: 16px; margin-bottom: 5px; }
+        .position-info span { color: #888; font-size: 13px; }
+        .position-price { text-align: right; }
+        .position-price .price { font-size: 18px; font-weight: bold; }
+        .target-sl { display: flex; gap: 20px; margin-top: 8px; font-size: 12px; }
+        .target { color: #00ff88; }
+        .sl { color: #ff4444; }
+        .trade-card { background: #1a1a1a; padding: 12px 20px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; font-size: 14px; }
+        .empty { text-align: center; color: #666; padding: 40px; }
+        footer { text-align: center; color: #666; padding: 20px; font-size: 12px; }
+        @media (max-width: 600px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>KAI Paper Trading</h1>
+            <span style="color:#666">Auto-refresh</span>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Capital</div>
+                <div class="stat-value">₹100000</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Cash</div>
+                <div class="stat-value" id="cash">₹90000</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Invested</div>
+                <div class="stat-value" id="invested">₹10000</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">P&L</div>
+                <div class="stat-value" id="pnl">-₹40</div>
+            </div>
+        </div>
+        
+        <h2>Open Positions</h2>
+        <div id="positions">
+            <div class="position-card">
+                <div class="position-info">
+                    <h3>BAJAJ-AUTO</h3>
+                    <span>Bought @ ₹10097</span>
+                    <div class="target-sl">
+                        <span class="target">Target: ₹11107</span>
+                        <span class="sl">SL: ₹9794</span>
+                    </div>
+                </div>
+                <div class="position-price">
+                    <div class="price">₹10113</div>
+                    <div class="green">+₹158 (+1.56%)</div>
+                </div>
+            </div>
+        </div>
+        
+        <h2>Trade History</h2>
+        <div id="trades">
+            <div class="empty">No closed trades yet</div>
+        </div>
+        
+        <footer>Last updated: <span id="time"></span></footer>
+    </div>
+    
+    <script>
+        document.getElementById('time').innerText = new Date().toLocaleString();
+    </script>
+</body>
+</html>
