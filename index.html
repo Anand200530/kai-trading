@@ -416,7 +416,7 @@
     </div>
     
     <script>
-        // Fetch from GitHub Gist (no auth needed for public gist)
+        // Fetch from GitHub Gist (public)
         const GIST_ID = 'c8d0bd38ef926e6e82c9f72cc4550971';
         
         let cachedData = JSON.parse(localStorage.getItem('kaiTradingData') || 'null');
@@ -452,7 +452,8 @@
         async function fetchData() {
             // Try to fetch from GitHub Gist
             try {
-                const response = await fetch('https://gist.githubusercontent.com/Anand200530/' + GIST_ID + '/raw/trading_data.json');
+                const url = 'https://gist.githubusercontent.com/Anand200530/c8d0bd38ef926e6e82c9f72cc4550971/raw/trading_data.json';
+                const response = await fetch(url);
                 if (response.ok) {
                     const data = await response.json();
                     cachedData = data;
