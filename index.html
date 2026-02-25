@@ -3,74 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KAI Paper Trading</title>
+    <title>KAI Paper Trading Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
         
-        header { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid #30363d; margin-bottom: 24px; }
-        h1 { font-size: 28px; color: #58a6ff; }
-        .last-update { color: #8b949e; font-size: 14px; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
         
-        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
-        .stat-card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 12px; text-align: center; }
-        .stat-label { color: #8b949e; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-value { font-size: 28px; font-weight: 600; }
-        .green { color: #3fb950; }
-        .red { color: #f85149; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
         
-        h2 { font-size: 18px; margin-bottom: 16px; color: #c9d1d9; display: flex; align-items: center; gap: 8px; }
-        .badge { background: #238636; color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 12px; }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 24px;
+        }
         
-        .positions { margin-bottom: 32px; }
-        .position-card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .position-info h3 { font-size: 18px; color: #58a6ff; margin-bottom: 6px; }
-        .position-info .meta { color: #8b949e; font-size: 14px; }
-        .position-info .meta span { margin-right: 16px; }
-        .position-price { text-align: right; }
-        .position-price .price { font-size: 22px; font-weight: 600; }
-        .position-price .change { font-size: 14px; margin-top: 4px; }
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
         
-        .target-sl { display: flex; gap: 20px; margin-top: 10px; font-size: 13px; }
-        .target-sl span { color: #8b949e; }
-        .target { color: #3fb950; }
-        .sl { color: #f85149; }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
         
-        .trade-card { background: #161b22; border: 1px solid #30363d; padding: 14px 20px; border-radius: 8px; margin-bottom: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 10px; font-size: 14px; align-items: center; }
-        .trade-card .symbol { color: #58a6ff; font-weight: 500; }
-        .trade-card .side-buy { color: #3fb950; }
-        .trade-card .side-sell { color: #f85149; }
-        .trade-card .status-sl { color: #f85149; }
-        .trade-card .status-target { color: #3fb950; }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
         
-        .empty { text-align: center; color: #8b949e; padding: 40px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; }
+        .logo h1 {
+            font-size: 24px;
+            color: var(--text);
+        }
         
-        footer { text-align: center; color: #8b949e; padding: 24px; font-size: 13px; border-top: 1px solid #30363d; margin-top: 32px; }
+        .logo span {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
         
-        .loading { text-align: center; padding: 40px; color: #8b949e; }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
         
-        @media (max-width: 700px) {
-            .stats { grid-template-columns: repeat(2, 1fr); }
-            .trade-card { grid-template-columns: 1fr 1fr 1fr; }
-            .trade-card .exit-price, .trade-card .pnl { display: none; }
+        .refresh-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .last-update {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .stat-value.success { color: var(--success); }
+        .stat-value.danger { color: var(--danger); }
+        
+        .stat-change {
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        
+        /* Section */
+        .section {
+            margin-bottom: 32px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge {
+            background: var(--success);
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        
+        /* Positions */
+        .positions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .position-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .position-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        
+        .position-info .meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .position-info .meta span {
+            margin-right: 16px;
+        }
+        
+        .position-price {
+            text-align: center;
+        }
+        
+        .position-price .current {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .position-pnl {
+            text-align: right;
+        }
+        
+        .position-pnl .value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .position-pnl .value.success { color: var(--success); }
+        .position-pnl .value.danger { color: var(--danger); }
+        
+        .position-pnl .percent {
+            font-size: 13px;
+        }
+        
+        .position-targets {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .target { color: var(--success); }
+        .sl { color: var(--danger); }
+        
+        /* Trades Table */
+        .trades-table {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .trades-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .trades-table th {
+            background: #f1f5f9;
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .trades-table td {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.target { background: #d1fae5; color: #065f46; }
+        .status-badge.sl { background: #fee2e2; color: #991b1b; }
+        
+        /* Empty State */
+        .empty-state {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+        
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            margin-top: 32px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .position-card {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .position-price, .position-pnl {
+                text-align: left;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>KAI Paper Trading</h1>
-            <span class="last-update">Auto-refresh: 30s</span>
+            <div class="logo">
+                <div class="logo-icon">K</div>
+                <div>
+                    <h1>KAI Paper Trading</h1>
+                    <span>Indian Stock Market</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="last-update" id="last">Last updated:Update --</span>
+                <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
+            </div>
         </header>
         
-        <div class="stats">
+        <!-- Stats -->
+        <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Capital</div>
+                <div class="stat-label">Total Capital</div>
                 <div class="stat-value" id="capital">---</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Cash</div>
+                <div class="stat-label">Cash Available</div>
                 <div class="stat-value" id="cash">---</div>
             </div>
             <div class="stat-card">
@@ -79,140 +377,195 @@
             </div>
             <div class="stat-card">
                 <div class="stat-label">Total P&L</div>
-                <div class="stat-value" id="total-pnl">---</div>
+                <div class="stat-value" id="totalPnl">---</div>
             </div>
         </div>
         
-        <div class="positions">
-            <h2>Open Positions <span class="badge" id="pos-count">0</span></h2>
-            <div id="positions-list">
-                <div class="loading">Loading...</div>
+        <!-- Open Positions -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    Open Positions 
+                    <span class="badge" id="positionCount">0</span>
+                </h2>
+            </div>
+            <div class="positions-list" id="positionsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading positions...
+                </div>
             </div>
         </div>
         
-        <div class="trades">
-            <h2>Trade History</h2>
-            <div id="trades-list">
-                <div class="empty">No closed trades yet</div>
+        <!-- Trade History -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Trade History</h2>
+            </div>
+            <div class="trades-table" id="tradesTable">
+                <div class="empty-state">
+                    <div class="empty-icon">📊</div>
+                    <p>No closed trades yet</p>
+                </div>
             </div>
         </div>
         
         <footer>
-            <p>KAI Paper Trading Dashboard | Data refreshed every 30 seconds</p>
-            <p>GitHub Pages Deployment</p>
+            <p>🚀 KAI Paper Trading | Data refreshes every 30 seconds</p>
         </footer>
     </div>
     
     <script>
-        // Configuration - change this to your API endpoint
-        const API_URL = 'https://api.jsonbin.io/v3/b/YOUR_BIN_ID/latest';
+        // Fetch from GitHub Gist (no auth needed for public gist)
+        const GIST_ID = 'c8d0bd38ef926e6e82c9f72cc4550971';
         
-        // Fallback: use localStorage cache
-        let cachedData = JSON.parse(localStorage.getItem('kai_trading_data') || 'null');
+        let cachedData = JSON.parse(localStorage.getItem('kaiTradingData') || 'null');
         
-        async function fetchData() {
-            try {
-                const response = await fetch(API_URL, { headers: { 'X-Access-Key': 'YOUR_API_KEY' }});
-                if (!response.ok) throw new Error('API unavailable');
-                const data = await response.json();
-                localStorage.setItem('kai_trading_data', JSON.stringify(data));
-                return data.record;
-            } catch (e) {
-                console.log('Using cached data');
-                return cachedData;
-            }
-        }
+        // Demo data for initial display
+        const demoData = {
+            capital: 100000,
+            balance: 90000,
+            positions: [
+                {
+                    symbol: 'BAJAJ-AUTO',
+                    entry_price: 10097,
+                    current_price: 10150,
+                    qty: 0.99,
+                    cost: 10000,
+                    target: 11107,
+                    stop_loss: 9794,
+                    pnl: 52,
+                    pnl_pct: 0.52
+                }
+            ],
+            trades: []
+        };
         
         function formatCurrency(amount) {
-            return '₹' + Math.abs(amount).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            return '₹' + Math.abs(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
         }
         
-        function formatNumber(num) {
-            return num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        function formatPrice(price) {
+            return '₹' + (price || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+        
+        async function fetchData() {
+            // Try to fetch from GitHub Gist
+            try {
+                const response = await fetch('https://gist.githubusercontent.com/Anand200530/' + GIST_ID + '/raw/trading_data.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    cachedData = data;
+                    localStorage.setItem('kaiTradingData', JSON.stringify(cachedData));
+                }
+            } catch (e) {
+                console.log('Using cached data', e);
+            }
+            
+            // Use demo data if no API
+            const data = cachedData || demoData;
+            renderDashboard(data);
         }
         
         function renderDashboard(data) {
-            if (!data) return;
-            
+            // Update stats
             document.getElementById('capital').textContent = formatCurrency(data.capital);
             document.getElementById('cash').textContent = formatCurrency(data.balance);
             
             let invested = 0;
-            let openPnl = 0;
+            let totalPnl = 0;
             
-            // Render positions
-            const posList = document.getElementById('positions-list');
-            document.getElementById('pos-count').textContent = data.positions?.length || 0;
+            // Positions
+            const positionsList = document.getElementById('positionsList');
+            document.getElementById('positionCount').textContent = data.positions?.length || 0;
             
             if (data.positions && data.positions.length > 0) {
-                posList.innerHTML = data.positions.map(pos => {
-                    invested += pos.cost || 0;
-                    const pnl = pos.pnl || 0;
-                    openPnl += pnl;
-                    const pnlClass = pnl >= 0 ? 'green' : 'red';
-                    const pnlSign = pnl >= 0 ? '+' : '';
-                    const pnlPct = pos.pnl_pct || 0;
+                invested = data.positions.reduce((sum, p) => sum + (p.cost || 0), 0);
+                totalPnl = data.positions.reduce((sum, p) => sum + (p.pnl || 0), 0);
+                
+                positionsList.innerHTML = data.positions.map(pos => {
+                    const pnlClass = (pos.pnl || 0) >= 0 ? 'success' : 'danger';
+                    const pnlSign = (pos.pnl || 0) >= 0 ? '+' : '';
                     
                     return `
                         <div class="position-card">
                             <div class="position-info">
                                 <h3>${pos.symbol}</h3>
                                 <div class="meta">
-                                    <span>Bought @ ₹${formatNumber(pos.entry_price)}</span>
-                                    <span>Qty: ${formatNumber(pos.qty)}</span>
+                                    <span>Bought @ ${formatPrice(pos.entry_price)}</span>
+                                    <span>Qty: ${(pos.qty || 0).toFixed(2)}</span>
                                 </div>
-                                <div class="target-sl">
-                                    <span class="target">Target: ₹${formatNumber(pos.target)}</span>
-                                    <span class="sl">SL: ₹${formatNumber(pos.stop_loss)}</span>
+                                <div class="position-targets">
+                                    <span class="target">Target: ${formatPrice(pos.target)}</span>
+                                    <span class="sl">SL: ${formatPrice(pos.stop_loss)}</span>
                                 </div>
                             </div>
                             <div class="position-price">
-                                <div class="price">₹${formatNumber(pos.current_price || pos.entry_price)}</div>
-                                <div class="change ${pnlClass}">${pnlSign}₹${formatNumber(Math.abs(pnl))} (${pnlSign}${pnlPct.toFixed(1)}%)</div>
+                                <div class="current">${formatPrice(pos.current_price || pos.entry_price)}</div>
+                            </div>
+                            <div class="position-pnl">
+                                <div class="value ${pnlClass}">${pnlSign}${formatCurrency(pos.pnl)}</div>
+                                <div class="percent ${pnlClass}">${pnlSign}${(pos.pnl_pct || 0).toFixed(2)}%</div>
                             </div>
                         </div>
                     `;
                 }).join('');
             } else {
-                posList.innerHTML = '<div class="empty">No open positions</div>';
+                positionsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📈</div>
+                        <p>No open positions</p>
+                    </div>
+                `;
             }
             
             document.getElementById('invested').textContent = formatCurrency(invested);
             
-            const totalPnl = openPnl;
-            const pnlEl = document.getElementById('total-pnl');
-            pnlEl.textContent = (totalPnl >= 0 ? '+' : '-') + formatCurrency(totalPnl);
-            pnlEl.className = 'stat-value ' + (totalPnl >= 0 ? 'green' : 'red');
+            const pnlEl = document.getElementById('totalPnl');
+            const pnlSign = totalPnl >= 0 ? '+' : '';
+            pnlEl.textContent = pnlSign + formatCurrency(totalPnl);
+            pnlEl.className = 'stat-value ' + (totalPnl >= 0 ? 'success' : 'danger');
             
-            // Render trades
-            const tradesList = document.getElementById('trades-list');
+            // Trades
+            const tradesTable = document.getElementById('tradesTable');
             if (data.trades && data.trades.length > 0) {
-                tradesList.innerHTML = data.trades.slice(-10).reverse().map(trade => `
-                    <div class="trade-card">
-                        <div class="symbol">${trade.symbol}</div>
-                        <div class="side-${trade.side.toLowerCase()}">${trade.side}</div>
-                        <div>₹${formatNumber(trade.entry_price)}</div>
-                        <div>₹${formatNumber(trade.exit_price || 0)}</div>
-                        <div class="status-${trade.status.toLowerCase()}">${trade.status}</div>
-                        <div class="${trade.pnl >= 0 ? 'green' : 'red'}">${trade.pnl >= 0 ? '+' : ''}₹${formatNumber(trade.pnl)}</div>
-                    </div>
-                `).join('');
-            } else {
-                tradesList.innerHTML = '<div class="empty">No closed trades yet</div>';
+                tradesTable.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Stock</th>
+                                <th>Entry</th>
+                                <th>Exit</th>
+                                <th>Status</th>
+                                <th>P&L</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.trades.slice(-10).reverse().map(trade => `
+                                <tr>
+                                    <td><strong>${trade.symbol}</strong></td>
+                                    <td>${formatPrice(trade.entry_price)}</td>
+                                    <td>${formatPrice(trade.exit_price || 0)}</td>
+                                    <td><span class="status-badge ${trade.status?.toLowerCase()}">${trade.status}</span></td>
+                                    <td class="${trade.pnl >= 0 ? 'success' : 'danger'}" style="color: ${trade.pnl >= 0 ? 'var(--success)' : 'var(--danger)'}">
+                                        ${trade.pnl >= 0 ? '+' : ''}${formatCurrency(trade.pnl)}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
             }
             
-            // Update timestamp
-            document.querySelector('.last-update').textContent = 'Updated: ' + new Date().toLocaleString();
+            // Update time
+            document.getElementById('lastUpdate').textContent = 'Last updated: ' + new Date().toLocaleString();
         }
         
-        // Initial render
-        if (cachedData) renderDashboard(cachedData);
+        // Initial load
+        fetchData();
         
-        // Auto-refresh
-        setInterval(async () => {
-            const data = await fetchData();
-            renderDashboard(data);
-        }, 30000);
+        // Auto-refresh every 30 seconds
+        setInterval(fetchData, 30000);
     </script>
 </body>
 </html>
