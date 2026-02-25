@@ -406,6 +406,7 @@
             <div class="stat-card highlight" id="pnlCard">
                 <div class="stat-label">Total P&L</div>
                 <div class="stat-value" id="totalPnl">---</div>
+                <div class="stat-value" style="font-size: 16px; opacity: 0.9;" id="totalPnlPct">---</div>
             </div>
             <div class="stat-card small">
                 <div class="stat-label">Cash</div>
@@ -565,6 +566,15 @@
             const pnlEl = document.getElementById('totalPnl');
             const pnlSign = totalPnl >= 0 ? '+' : '';
             pnlEl.textContent = pnlSign + formatCurrency(totalPnl);
+            
+            // Calculate and display percentage
+            const pnlPctEl = document.getElementById('totalPnlPct');
+            if (invested > 0) {
+                const pnlPct = (totalPnl / invested) * 100;
+                pnlPctEl.textContent = pnlSign + pnlPct.toFixed(2) + '%';
+            } else {
+                pnlPctEl.textContent = '0%';
+            }
             
             // Update P&L card style based on profit/loss
             const pnlCard = document.getElementById('pnlCard');
