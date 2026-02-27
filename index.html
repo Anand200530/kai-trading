@@ -450,7 +450,7 @@
     
     <script>
         // Fetch from GitHub Gist (public)
-        const GIST_ID = '40f40f2f150d60ed26ba63441d1c92ca';
+        const GIST_ID = '147693f46ebe896b56e4adba857b5574';
         
         let cachedData = JSON.parse(localStorage.getItem('kaiTradingData') || 'null');
         
@@ -485,7 +485,7 @@
         async function fetchData() {
             // Try to fetch from GitHub Gist
             try {
-                const url = 'https://gist.githubusercontent.com/Anand200530/40f40f2f150d60ed26ba63441d1c92ca/raw/trading_data.json';
+                const url = 'https://gist.githubusercontent.com/Anand200530/147693f46ebe896b56e4adba857b5574/raw/trading_data.json';
                 const response = await fetch(url);
                 if (response.ok) {
                     const data = await response.json();
