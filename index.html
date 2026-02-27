@@ -456,23 +456,23 @@
         
         // Demo data for initial display
         const demoData = {
-            capital: 100000,
-            balance: 90000,
-            positions: [
-                {
-                    symbol: 'BAJAJ-AUTO',
-                    entry_price: 10097,
-                    current_price: 10150,
-                    qty: 0.99,
-                    cost: 10000,
-                    target: 11107,
-                    stop_loss: 9794,
-                    pnl: 52,
-                    pnl_pct: 0.52
-                }
-            ],
-            trades: []
-        };
+        capital: 100000,
+        balance: 81000,
+        positions: [
+            {
+                symbol: 'INDUSINDBK',
+                entry_price: 958,
+                current_price: 959,
+                qty: 9.4,
+                cost: 9000,
+                target: 1073,
+                stop_loss: 910,
+                pnl: 11,
+                pnl_pct: 0.12
+            }
+        ],
+        trades: []
+    };
         
         function formatCurrency(amount) {
             return '₹' + Math.abs(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
@@ -485,7 +485,7 @@
         async function fetchData() {
             // Try to fetch from GitHub Gist
             try {
-                const url = 'https://gist.githubusercontent.com/Anand200530/147693f46ebe896b56e4adba857b5574/raw/trading_data.json';
+                const url = 'https://gist.githubusercontent.com/Anand200530/147693f46ebe896b56e4adba857b5574/raw/trading_data.json?v=27';
                 const response = await fetch(url);
                 if (response.ok) {
                     const data = await response.json();
